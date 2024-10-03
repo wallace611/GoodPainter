@@ -5,68 +5,68 @@
 #include "src/ShapeContainer.h"
 
 void displayFunction() {
-	glClearColor (1.0, 1.0, 1.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	
-	// Draw the shape in the shape container
-	int isBegin = 0;
-	int currentShape = 0;
-	for (int i = 0; i < scSize(); i++) {
-		float* c;
-		int* a;
-		switch (shapeContainer[i].infoType) {
-		case 1:		/* Shape */
-			currentShape = shapeContainer[i].info.shape;
-			break;
+    glClearColor(1.0, 1.0, 1.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-		case 2:		/* Thickness */
-			glPointSize(shapeContainer[i].info.thickness);
-			glLineWidth(shapeContainer[i].info.thickness);
-			break;
+    // Draw the shape in the shape container
+    int isBegin = 0;
+    int currentShape = 0;
+    for (int i = 0; i < scSize(); i++) {
+        float* c;
+        int* a;
+        switch (shapeContainer[i].infoType) {
+        case 1: /* Shape */
+            currentShape = shapeContainer[i].info.shape;
+            break;
+        case 2: /* Thickness */
+            glPointSize(shapeContainer[i].info.thickness);
+            glLineWidth(shapeContainer[i].info.thickness);
+            break;
+        case 3: /* Color */
+            c = shapeContainer[i].info.color;
+            glColor4f(c[0], c[1], c[2], c[3]);
+            break;
+        case 4: /* Axis */
+            if (isBegin == 0) {
+                isBegin = 1;
+                glBegin(currentShape);
+            }
+            a = shapeContainer[i].info.axis;
+            glVertex2i(a[0], WindowHeight - a[1]);
+            break;
+        case 0: /* End */
+            glEnd();
+            isBegin = 0;
+            break;
+        default:
+            break;
+        }
+    }
 
-		case 3:		/* Color */
-			c = shapeContainer[i].info.color;
-			glColor4f(c[0], c[1], c[2], c[3]);
-			break;
-
-		case 4:		/* Axis */
-			if (isBegin == 0) {
-				isBegin = 1;
-				glBegin(currentShape);
-			}
-			a = shapeContainer[i].info.axis;
-			glVertex2i(a[0], WindowHeight - a[1]);
-			break;
-
-		case 0:		/* End */
+    // Draw auxiliary shape
+    if (isDragging) {
+        glPointSize(Thickness);
+        glLineWidth(Thickness);
+        glColor4f(Color[0], Color[1], Color[2], Color[3]);
+        switch (ShapeType) {
+        case GP_LINE:
+            glBegin(GL_LINES);
+            glVertex2i(posX, WindowHeight - posY);
+            glVertex2i(cursorX, WindowHeight - cursorY);
+            glEnd();
+            break;
+        case GP_CURVE:
+			// DON'T TOUCH THESE CODE
+			// It will crash if I don't put these 2 lines of code
+			glBegin(GL_LINE_STRIP);
 			glEnd();
-			isBegin = 0;
-			break;
+            break;
+        default:
+            break;
+        }
+    }
 
-		default:
-			break;
-		}
-	}
-
-	// Draw auxiliary shape
-	if (isDragging && ShapeType == GP_LINE) {
-		glPointSize(Thickness);
-		glLineWidth(Thickness);
-		glColor4f(Color[0], Color[1], Color[2], Color[3]);
-		switch (ShapeType) {
-		case GP_LINE:
-			glBegin(GL_LINES);
-			glVertex2i(posX, WindowHeight - posY);
-			glVertex2i(cursorX, WindowHeight - cursorY);
-			glEnd();
-			break;
-
-		default:
-			break;
-		}
-	}
-
-	glutSwapBuffers();
+    glFinish();
 }
 
 void reshapeFunction(int w, int h) {
@@ -79,7 +79,7 @@ void reshapeFunction(int w, int h) {
 	glViewport(0, 0, WindowWidth, WindowHeight);
 	glMatrixMode(GL_MODELVIEW);
 
-	glutPostRedisplay();
+	glFlush();
 }
 
 void keyboardFunction(unsigned char key, int x, int y) {
@@ -98,23 +98,22 @@ void motionFunction(int btn, int x, int y) {
 			break;
 
 		case GP_CURVE:
-			glBegin(GL_LINES);
-			glVertex2i(posX, WindowHeight - posY);
-			scPushAxis(posX, posY);
-			posX = x;
-			posY = y;
-			glVertex2i(posX, WindowHeight - posY);
-			scPushAxis(posX, posY);
-			glEnd();
-			break;
-
+            glBegin(GL_LINES);
+            glVertex2i(posX, WindowHeight - posY);
+            glVertex2i(x, WindowHeight - y);
+            glEnd();
+            scPushAxis(posX, posY);
+            posX = x;
+            posY = y;
+            scPushAxis(posX, posY);
+			displayFunction();
+            break;
 		default:
 			break;
 		}
 		
 	}
 	isDragging = false;
-	glutPostRedisplay();
 }
 
 void mouseFunction(int button, int state, int x, int y) {
@@ -133,19 +132,13 @@ void mouseFunction(int button, int state, int x, int y) {
 				scPushEnd();
 				break;
 
+			case GP_CURVE:
+                scPushShape(GL_LINE_STRIP);
+                scPushThick(Thickness);
+                scPushColor(Color);
 			case GP_LINE:
 				posX = x;
 				posY = y;
-				break;
-
-			case GP_CURVE:
-				glBegin(GL_LINES);
-				posX = x;
-				posY = y;
-
-				scPushShape(GL_LINES);
-				scPushThick(Thickness);
-				scPushColor(Color);
 				break;
 
 			default:
@@ -168,16 +161,15 @@ void mouseFunction(int button, int state, int x, int y) {
 				scPushEnd();
 				break;
 
-			case GP_CURVE:
-				glEnd();
-				break;
+            case GP_CURVE:
+                scPushEnd();
 
 			default:
 				break;
 			}
 		}
 	}
-	glutPostRedisplay();
+	glFlush();
 }
 
 void InitPainter() {
@@ -195,7 +187,7 @@ void InitPainter() {
 
 int main(int argc, char** argv) {
 	glutInit(&argc,argv);
-	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA);
+	glutInitDisplayMode (GLUT_SINGLE | GLUT_RGBA);
 
 	glutInitWindowPosition(WINDOW_POS_X, WINDOW_POS_Y);
 	glutInitWindowSize(WindowWidth, WindowHeight);
