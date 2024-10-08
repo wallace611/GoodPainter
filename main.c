@@ -83,8 +83,21 @@ void reshapeFunction(int w, int h) {
 }
 
 void keyboardFunction(unsigned char key, int x, int y) {
-	if (key=='Q'||key=='q') exit(0);
-	else if (key=='c')  glClear(GL_COLOR_BUFFER_BIT);
+	int mod = glutGetModifiers();
+	switch (key) {
+	case 26:
+		if (mod == 2) {
+			scUndo();
+		}
+		else if (mod == 3) {
+			scRedo();
+		}
+		break;
+
+	default:
+		break;
+	}
+	displayFunction();
 }
 
 void motionFunction(int btn, int x, int y) {

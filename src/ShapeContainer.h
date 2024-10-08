@@ -19,11 +19,8 @@ typedef struct {
 
 shapeInfo* shapeContainer; /* The array */
 unsigned size_sc;		   /* The current size of the array*/
-unsigned end_sc;		       /* Pointing to the back of the array */
-
-shapeInfo* undoContainer; /* The redo list */
-unsigned size_uc;
-unsigned end_uc;
+unsigned end_sc;	       /* Pointing to the back of the array */
+int canRedo;
 
 int scInit();
 unsigned scSize();
@@ -37,8 +34,3 @@ shapeInfo scPop();
 shapeInfo scBack();
 int scUndo();
 int scRedo();
-
-void ucClear();
-shapeInfo ucPop();
-shapeInfo ucBack();
-int scPushBackWithoutClear(shapeInfo info);

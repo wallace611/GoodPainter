@@ -4,20 +4,17 @@
 #include "ShapeContainer.h"
 
 int scInit() {
-	shapeContainer = 0;
-	undoContainer = 0;
+	free(shapeContainer);
 	size_sc = SC_DEFAULT_SIZE;
-	size_uc = UC_DEFAULT_SIZE;
 	shapeContainer = (shapeInfo*) malloc(size_sc * sizeof(shapeInfo));
-	undoContainer = (shapeInfo*) malloc(size_uc * sizeof(shapeInfo));
 
-	if (shapeContainer == NULL || undoContainer == NULL) {
+	if (shapeContainer == NULL) {
 		// Check exception
 		return -1;
 	}
 
 	end_sc = 0;
-	end_uc = 0;
+	canRedo = 0;
 	return 1;
 }
 
@@ -26,7 +23,15 @@ unsigned scSize() {
 }
 
 int scPushBack(shapeInfo info) {
-	ucClear();
+	if (end_sc <= (size_sc >> 2) && size_sc > SC_DEFAULT_SIZE) {
+		size_sc >>= 1;
+		shapeInfo* tmp = (shapeInfo*) realloc(shapeContainer, size_sc * sizeof(shapeInfo));
+		if (tmp == NULL) {
+			size_sc <<= 1;
+			return -1;
+		}
+		shapeContainer = tmp;
+	}
 	if (end_sc == size_sc) {
 		size_sc <<= 1;
 		shapeInfo* tmp = (shapeInfo*) realloc(shapeContainer, size_sc * sizeof(shapeInfo));
@@ -38,6 +43,7 @@ int scPushBack(shapeInfo info) {
 		shapeContainer = tmp;
 	}
 	shapeContainer[end_sc++] = info;
+	canRedo = 0;
 	return 1;
 }
 
@@ -103,89 +109,22 @@ shapeInfo scBack() {
 
 int scUndo() {
 	if (end_sc == 0) return -1;
+	canRedo = 1;
 	while (scBack().infoType != 1) {
-		// When the space is not enough
-		if (end_uc == size_uc) {
-			size_uc <<= 1;
-			shapeInfo* tmp = (shapeInfo*) realloc(undoContainer, size_uc * sizeof(shapeInfo));
-
-			if (tmp == NULL) {
-				// Exception
-				size_uc >>= 1;
-				return -1;
-			}
-			undoContainer = tmp;
-		}
-
-		undoContainer[end_uc++] = scPop();
+		end_sc -= 1;
 	}
-	undoContainer[end_uc++] = scPop();
+	end_sc -= 1;
 	return 1;
 }
 
 int scRedo() {
-	if (end_uc == 0) return -1;
-	while (ucBack().infoType != 0) {
-		scPushBackWithoutClear(ucPop());
+	if (end_sc == size_sc || !canRedo) {
+		return -1;
 	}
-	scPushBackWithoutClear(ucPop());
-	return 1;
-}
-
-void ucClear() {
-	int sTmp = size_uc;
-	size_uc = UC_DEFAULT_SIZE;
-	shapeInfo* tmp = (shapeInfo*) realloc(undoContainer, size_uc * sizeof(shapeInfo));
-
-	if (tmp != NULL) {
-		undoContainer = tmp;
-		size_uc = sTmp;
+	end_sc += 1;
+	while (scBack().infoType != 0) {
+		end_sc += 1;
 	}
-
-	end_uc = 0;
-}
-
-shapeInfo ucPop() {
-	if (end_uc == 0) {
-		shapeInfo tmp = { .infoType = -1 };
-		return tmp;
-	}
-
-	end_uc -= 1;
-	if (end_uc < (size_uc >> 2) && size_uc > UC_DEFAULT_SIZE) {
-		size_uc >>= 2;
-		shapeInfo* tmp = (shapeInfo*) realloc(undoContainer, size_uc * sizeof(shapeInfo));
-
-		if (tmp == NULL) {
-			size_uc <<= 2;
-			shapeInfo tmp = { .infoType = -1 };
-			return tmp;
-		}
-		undoContainer = tmp;
-	}
-	return undoContainer[end_uc];
-}
-
-shapeInfo ucBack() {
-	if (end_uc == 0) {
-		shapeInfo tmp = { .infoType = -1 };
-		return tmp;
-	}
-	return undoContainer[end_uc - 1];
-}
-
-int scPushBackWithoutClear(shapeInfo info) {
-	if (end_sc == size_sc) {
-		size_sc <<= 1;
-		shapeInfo* tmp = (shapeInfo*) realloc(shapeContainer, size_sc * sizeof(shapeInfo));
-		if (tmp == NULL) {
-			// Check exception
-			size_sc >>= 1;
-			return -1;
-		}
-		shapeContainer = tmp;
-	}
-	shapeContainer[end_sc++] = info;
 	return 1;
 }
 
