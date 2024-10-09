@@ -22,6 +22,9 @@ unsigned size_sc;		   /* The current size of the array*/
 unsigned end_sc;	       /* Pointing to the back of the array */
 int canRedo;
 
+int scSaveToFile(char* path);
+int scLoadFromFile(char* path);
+int scBlendFromFile(char* path);
 int scInit();
 unsigned scSize();
 int scPushBack(shapeInfo info);

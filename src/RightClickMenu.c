@@ -7,6 +7,34 @@ void fileMenuCallback(int opt) {
 	printf("Selected option %d\n", WindowWidth);
 }
 
+void fileFunc(int value) {
+	switch (value) {
+	case 1:
+		InitPainter();
+		break;
+
+	case 2:
+		scLoadFromFile("test.dat");
+		break;
+
+	case 3:
+		scSaveToFile("test.dat");
+		break;
+
+	case 4:
+		scBlendFromFile("test.dat");
+		break;
+
+	case -1:
+		exit(0);
+		break;
+
+	default:
+		break;
+	}
+	displayFunction();
+}
+
 void editFunc(int value) {
 	switch (value) {
 	case 1:
@@ -45,11 +73,12 @@ void brushSizeFunc(int value) {
 }
 
 void CreateRCMenu() {
-	fileMenu = glutCreateMenu(fileMenuCallback);
+	fileMenu = glutCreateMenu(fileFunc);
 	glutAddMenuEntry("New File", 1);
 	glutAddMenuEntry("Load File", 2);
 	glutAddMenuEntry("Save File", 3);
-	glutAddMenuEntry("Exit", 4);
+	glutAddMenuEntry("Blend File", 4);
+	glutAddMenuEntry("Exit", -1);
 
 	editMenu = glutCreateMenu(editFunc);
 	glutAddMenuEntry("Undo", 1);

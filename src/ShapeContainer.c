@@ -3,6 +3,72 @@
 
 #include "ShapeContainer.h"
 
+int scSaveToFile(char* path) {
+	FILE* f = fopen(path, "wb");
+	if (!f) {
+		perror("Failed to open file");
+		return -1;
+	}
+	fwrite(&end_sc, sizeof(unsigned), 1, f);
+	fwrite(shapeContainer, sizeof(shapeInfo), end_sc, f);
+	fclose(f);
+
+	return 0;
+}
+
+int scLoadFromFile(char* path) {
+	FILE* ifp = fopen(path, "rb");
+	if (!ifp) {
+		perror("Failed to open file");
+		return -1;
+	}
+
+	unsigned newSize;
+	fread(&newSize, sizeof(unsigned), 1, ifp);
+	shapeInfo* newContainer = (shapeInfo*)malloc(newSize * sizeof(shapeInfo));
+	if (!newContainer) {
+		perror("Failed to allocate memory");
+		fclose(ifp);
+		return -1;
+	}
+
+	fread(newContainer, sizeof(shapeInfo), newSize, ifp);
+
+	free(shapeContainer);
+	shapeContainer = newContainer;
+	end_sc = newSize;
+	size_sc = newSize;
+	fclose(ifp);
+
+	return 0;
+}
+
+int scBlendFromFile(char* path) {
+	FILE* ifp = fopen(path, "rb");
+	if (!ifp) {
+		perror("Failed to open file");
+		return -1;
+	}
+
+	unsigned newSize;
+	fread(&newSize, sizeof(unsigned), 1, ifp);
+	shapeInfo* newContainer = (shapeInfo*)malloc(newSize * sizeof(shapeInfo));
+	if (!newContainer) {
+		perror("Failed to allocate memory");
+		fclose(ifp);
+		return -1;
+	}
+
+	fread(newContainer, sizeof(shapeInfo), newSize, ifp);
+
+	for (int i = 0; i < newSize; i++) {
+		scPushBack(newContainer[i]);
+	}
+	fclose(ifp);
+
+	return 0;
+}
+
 int scInit() {
 	free(shapeContainer);
 	size_sc = SC_DEFAULT_SIZE;

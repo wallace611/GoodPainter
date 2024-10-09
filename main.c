@@ -195,7 +195,17 @@ void InitPainter() {
 	Color[2] = .0f;
 	Color[3] = 1.0f;
 	glColor4f(Color[0], Color[1], Color[2], Color[3]);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	first = 0;
+
+	scInit();
+	bsbInit();
+	wbInit();
+
+	displayFunction();
 }
 
 int main(int argc, char** argv) {

@@ -8,6 +8,7 @@ int fileMenu, editMenu, colorMenu, drawTypeMenu, brushSizeMenu;
 int mainMenu;
 
 void fileMenuCallback(int);
+void fileFunc(int value);
 void editFunc(int value);
 void colorFunc(int value);
 void drawTypeFunc(int value);
