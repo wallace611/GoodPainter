@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include "src/BottomStateBar.h"
 #include "src/MouseEventHandler.h"
 #include "src/RightClickMenu.h"
 #include "src/ShapeContainer.h"
@@ -66,6 +67,15 @@ void displayFunction() {
         }
     }
 
+	if (bsbState == BSB_STATUS_MODE) {
+		sprintf(bsbOutputStream,
+			"ShapeType: %d | Thickness: %.2f | Color: (%.2f, %.2f, %.2f, %.2f)",
+			ShapeType,
+			Thickness,
+			Color[0], Color[1], Color[2], Color[3]);
+	}
+	bsbRender(WindowWidth, WindowHeight);
+
     glFinish();
 }
 
@@ -82,20 +92,132 @@ void reshapeFunction(int w, int h) {
 	glFlush();
 }
 
+static void parseColor(const char* commandStr, float* color) {
+	int r, g, b, a = 255;  // Default alpha to 255 (fully opaque)
+	float rf, gf, bf, af = 1.0f;
+	unsigned int hexColor;
+
+	// Try parsing as integers (e.g., "255 255 255" or "255 255 255 255")
+	int numParsed = sscanf(commandStr, "%d %d %d %d", &r, &g, &b, &a);
+	if (numParsed >= 3) {
+		color[0] = r / 255.0f;
+		color[1] = g / 255.0f;
+		color[2] = b / 255.0f;
+		color[3] = a / 255.0f;
+		return;
+	}
+
+	// Try parsing as floats (e.g., "1.0 0.5 0.0" or "1.0 0.5 0.0 0.8")
+	numParsed = sscanf(commandStr, "%f %f %f %f", &rf, &gf, &bf, &af);
+	if (numParsed >= 3) {
+		color[0] = rf;
+		color[1] = gf;
+		color[2] = bf;
+		color[3] = af;
+		return;
+	}
+
+	// Try parsing as a hexadecimal string (e.g., "#FF00FF" or "FF00FF80")
+	if (commandStr[0] == '#') {
+		commandStr++;  // Skip the '#' character
+	}
+	numParsed = sscanf(commandStr, "%x", &hexColor);
+	if (numParsed == 1) {
+		if (strlen(commandStr) == 6) {  // RGB format
+			color[0] = ((hexColor >> 16) & 0xFF) / 255.0f;
+			color[1] = ((hexColor >> 8) & 0xFF) / 255.0f;
+			color[2] = (hexColor & 0xFF) / 255.0f;
+			color[3] = 1.0f;  // Default alpha
+		} else if (strlen(commandStr) == 8) {  // RGBA format
+			color[0] = ((hexColor >> 24) & 0xFF) / 255.0f;
+			color[1] = ((hexColor >> 16) & 0xFF) / 255.0f;
+			color[2] = ((hexColor >> 8) & 0xFF) / 255.0f;
+			color[3] = (hexColor & 0xFF) / 255.0f;
+		}
+		return;
+	}
+
+	// If parsing fails, set a default color (e.g., black)
+	color[0] = color[1] = color[2] = 0.0f;
+	color[3] = 1.0f;
+}
+
 void keyboardFunction(unsigned char key, int x, int y) {
 	int mod = glutGetModifiers();
-	switch (key) {
-	case 26:
-		if (mod == 2) {
-			scUndo();
-		}
-		else if (mod == 3) {
-			scRedo();
-		}
-		break;
+	if (bsbState == BSB_STATUS_MODE) {
+		switch (key) {
+		case 26: // ctrl + z
+			if (mod == 2) {
+				scUndo();
+			}
+			else if (mod == 3) {
+				scRedo();
+			}
+			break;
 
-	default:
-		break;
+		case 27: // esc
+			bsbState = BSB_STATUS_MODE;
+			break;
+
+		case ':':
+			bsbState = BSB_COMMAND_MODE;
+			break;
+
+		default:
+			break;
+		}
+	}
+	else { // Input mode or command mode
+		switch (key) {
+		case 8: // backspace
+			bsbInputBackspace();
+			break;
+		case 13: // enter
+			commandStr = bsbInputFinish();
+			if (commandStr != NULL) {
+				if (bsbState == BSB_INPUT_MODE) {
+					switch (inputCmdState) {
+					case IN_COLOR:
+						parseColor(commandStr, Color);
+						break;
+
+					case IN_THICK:
+						sscanf(commandStr, "%f", &Thickness);
+						break;
+
+					case IN_FILE:
+						switch (fileState) {
+						case 0:
+							scLoadFromFile(commandStr);
+							break;
+
+						case 1:
+							scSaveToFile(commandStr);
+							break;
+
+						case 2:
+							scBlendFromFile(commandStr);
+							break;
+						}
+						displayFunction();
+					}
+				}
+				else if (bsbState == BSB_COMMAND_MODE) {
+					if (commandStr[0] == 'c') {
+						InitPainter();
+					} 
+					else if (commandStr[0] == 'q') {
+						exit(0);
+					}
+				}
+			}
+			bsbState = BSB_STATUS_MODE;
+			break;
+
+		default:
+			bsbInputCharacter(key);
+			break;
+		}
 	}
 	displayFunction();
 }
@@ -203,7 +325,6 @@ void InitPainter() {
 
 	scInit();
 	bsbInit();
-	wbInit();
 
 	displayFunction();
 }

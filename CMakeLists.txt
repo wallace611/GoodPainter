@@ -49,7 +49,7 @@ foreach(ex IN LISTS Examples)
     message(STATUS "Configuring ${ex}...")
 
     add_executable(${ex})
-    target_sources(${ex} PRIVATE "${ex}.c"    "src/RightClickMenu.h" "src/RightClickMenu.c" "src/MouseEventHandler.h" "src/MouseEventHandler.c"    "src/ShapeContainer.h" "src/ShapeContainer.c"  "main.h")
+    target_sources(${ex} PRIVATE "${ex}.c"    "src/RightClickMenu.h" "src/RightClickMenu.c" "src/MouseEventHandler.h" "src/MouseEventHandler.c"    "src/ShapeContainer.h" "src/ShapeContainer.c"  "main.h" "src/BottomStateBar.h" "src/BottomStateBar.c")
     target_link_libraries(${ex} PRIVATE GLUT::GLUT)
 
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")

@@ -1,5 +1,6 @@
 #include "RightClickMenu.h"
 
+#include "BottomStateBar.h"
 #include "ShapeContainer.h"
 #include "../main.h"
 
@@ -14,15 +15,27 @@ void fileFunc(int value) {
 		break;
 
 	case 2:
-		scLoadFromFile("test.dat");
+		inputCmdState = IN_FILE;
+		fileState = 0;
+		bsbState = BSB_INPUT_MODE;
+		bsbWarning = 1;
+		bsbOutputStream = "Please input file path";
 		break;
 
 	case 3:
-		scSaveToFile("test.dat");
+		inputCmdState = IN_FILE;
+		fileState = 1;
+		bsbState = BSB_INPUT_MODE;
+		bsbWarning = 1;
+		bsbOutputStream = "Please input file path";
 		break;
 
 	case 4:
-		scBlendFromFile("test.dat");
+		inputCmdState = IN_FILE;
+		fileState = 2;
+		bsbState = BSB_INPUT_MODE;
+		bsbWarning = 1;
+		bsbOutputStream = "Please input file path";
 		break;
 
 	case -1:
@@ -50,6 +63,28 @@ void editFunc(int value) {
 }
 
 void colorFunc(int value) {
+	switch (value) {
+	case 2:
+		Color[0] = .0f;
+		Color[1] = .0f;
+		Color[2] = .0f;
+		Color[3] = 1.0f;
+		break;
+
+	case 1:
+		Color[0] = 1.0f;
+		Color[1] = 1.0f;
+		Color[2] = 1.0f;
+		Color[3] = 1.0f;
+		break;
+
+	case -1:
+		bsbState = BSB_INPUT_MODE;
+		inputCmdState = IN_COLOR;
+		bsbOutputStream = "please input color, byte:\"124 233 100\" or float:\"0.2 0.4 0.23\" or hex:\"#42e3f5\"";
+		break;
+	}
+	displayFunction();
 }
 
 void drawTypeFunc(int value) {
@@ -64,12 +99,16 @@ void brushSizeFunc(int value) {
 		break;
 	case 2:
 		Thickness += 1.0f;
-	default:
+	case -1:
+		bsbState = BSB_INPUT_MODE;
+		inputCmdState = IN_THICK;
+		bsbOutputStream = "please input thickness";
 		break;
 	}
 	if (Thickness < 1.0f) {
 		Thickness = 1.0f;
 	}
+	displayFunction();
 }
 
 void CreateRCMenu() {
@@ -87,6 +126,7 @@ void CreateRCMenu() {
 	colorMenu = glutCreateMenu(colorFunc);
 	glutAddMenuEntry("White", 1);
 	glutAddMenuEntry("Black", 2);
+	glutAddMenuEntry("Input Color", -1);
 
 	drawTypeMenu = glutCreateMenu(drawTypeFunc);
 	glutAddMenuEntry("Point", GP_POINT);
@@ -96,6 +136,7 @@ void CreateRCMenu() {
 	brushSizeMenu = glutCreateMenu(brushSizeFunc);
 	glutAddMenuEntry("Smaller", 1);
 	glutAddMenuEntry("Bigger", 2);
+	glutAddMenuEntry("Input Thickness", -1);
 
 	mainMenu = glutCreateMenu(fileMenuCallback);
 	glutAddSubMenu("Files", fileMenu);

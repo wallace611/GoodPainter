@@ -10,14 +10,18 @@
 #define    GP_LINE	  2
 #define    GP_CURVE	  3
 
-const static int WINDOW_POS_X = 1000;
-const static int WINDOW_POS_Y = 500;
+#define		IN_THICK	  1
+#define		IN_COLOR	  2
+#define		IN_FILE		  3
+
+const static int WINDOW_POS_X = 300;
+const static int WINDOW_POS_Y = 200;
 
 static int WindowWidth = 800;
 static int WindowHeight = 600;
 
 int ShapeType;
-int Thickness;
+float Thickness;
 float Color[4];
 
 int first; /* Flag of initial point for lines and curve */
@@ -25,6 +29,10 @@ int first; /* Flag of initial point for lines and curve */
 static bool isDragging = false;
 int posX, posY;  /* Point positioin */
 int cursorX, cursorY; /* Cursor position, for auxiliary shape */
+
+char* commandStr;
+int inputCmdState;
+int fileState;
 
 void displayFunction();
 void reshapeFunction(int w, int h);
