@@ -132,6 +132,7 @@ void CreateRCMenu() {
 	glutAddMenuEntry("Point", GP_POINT);
 	glutAddMenuEntry("Line", GP_LINE);
 	glutAddMenuEntry("Brush", GP_CURVE);
+	glutAddMenuEntry("Polygon", GP_POLYGON);
 
 	brushSizeMenu = glutCreateMenu(brushSizeFunc);
 	glutAddMenuEntry("Smaller", 1);

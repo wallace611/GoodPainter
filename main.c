@@ -157,6 +157,11 @@ void keyboardFunction(unsigned char key, int x, int y) {
 
 		case 27: // esc
 			bsbState = BSB_STATUS_MODE;
+			if (ShapeType == GP_POLYGON) {
+				glEnd();
+				scPushEnd();
+				glFlush();
+			}
 			break;
 
 		case ':':
@@ -275,6 +280,23 @@ void mouseFunction(int button, int state, int x, int y) {
 				posX = x;
 				posY = y;
 				break;
+
+			case GP_POLYGON:
+				if (first == 0) {
+					glBegin(GL_POLYGON);
+					scPushShape(GL_POLYGON);
+					scPushThick(Thickness);
+					scPushColor(Color);
+					glVertex2i(x, WindowHeight - y);
+					scPushAxis(x, y);
+					side = 1;
+				}
+				else {
+					scPushColor(Color);
+					glVertex2i(x, WindowHeight - y);
+					scPushAxis(x, y);
+					side += 1;
+				}
 
 			default:
 				break;

@@ -9,6 +9,7 @@
 #define    GP_POINT   1
 #define    GP_LINE	  2
 #define    GP_CURVE	  3
+#define	   GP_POLYGON 4
 
 #define		IN_THICK	  1
 #define		IN_COLOR	  2
@@ -29,6 +30,8 @@ int first; /* Flag of initial point for lines and curve */
 static bool isDragging = false;
 int posX, posY;  /* Point positioin */
 int cursorX, cursorY; /* Cursor position, for auxiliary shape */
+
+int side;
 
 char* commandStr;
 int inputCmdState;
